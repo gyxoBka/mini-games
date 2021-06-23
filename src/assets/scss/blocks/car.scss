@@ -1,0 +1,11 @@
+.car, .enemy {
+    width: 50px;
+    height: 100px;
+    background: transparent url('../images/player.png') center / cover no-repeat;
+
+    position: absolute;
+    left: 125px;
+    bottom: 10px;
+
+    z-index: 100;
+}
