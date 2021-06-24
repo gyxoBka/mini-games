@@ -1,6 +1,7 @@
 import { $ } from "../../core/Dom";
 import { GameComponent } from "../../core/GameComponent";
 import { getRand } from "../../core/utils";
+import { Select } from "../../plugins/select";
 import { getGameTemplate } from "./speedRacing.template";
 
 export class SpeedRacing extends GameComponent {
@@ -19,6 +20,19 @@ export class SpeedRacing extends GameComponent {
 
     render() {
         this.$el.html(getGameTemplate());
+
+        const select = new Select('#select', {
+            placeholder: 'Выберите уровень сложности',
+            data: [
+                {id: '1', value: 'Легкий'},
+                {id: '2', value: 'Нормальный'},
+                {id: '3', value: 'Сложный'},
+                {id: '4', value: 'Экстрим'},
+            ],
+            onSelect(item) {
+
+            }
+        })
     }
 
     onClick(e) {
@@ -26,7 +40,7 @@ export class SpeedRacing extends GameComponent {
             e.target.classList.add('hide');
 
             this.$score = $.create('div', 'score');
-            this.$el.append(this.$score);
+            this.$el.appendTo(this.$score, '.game__area');
 
             this.$car = $.create('div', 'car');
             this.gameArea = this.$el.appendTo(this.$car, '.game__area');
@@ -38,12 +52,10 @@ export class SpeedRacing extends GameComponent {
     }
 
     onKeydown(e) {
-        e.preventDefault();
         keyDown(e.key);
     }
 
     onKeyup(e) {
-        e.preventDefault();
         keyUp(e.key);
     }
 }
@@ -53,6 +65,10 @@ const keys = {
     ArrowDown: false,
     ArrowRight: false,
     ArrowLeft: false,
+    w: false,
+    s: false,
+    d: false,
+    a: false,
 }
 
 const gameData = {
@@ -82,9 +98,11 @@ function startGame() {
     gameData.x = this.$car.$el.offsetLeft;
     gameData.y = this.$car.$el.offsetTop;
 
-    this.$car.css('left', this.gameArea.offsetWidth / 2 - this.$car.$el.offsetWidth / 2);
-    this.$car.css('top', 'auto');
-    this.$car.css('bottom', '10px');
+    this.$car.css({
+        left: this.gameArea.offsetWidth / 2 - this.$car.$el.offsetWidth / 2,
+        top: 'auto',
+        bottom: '10px',
+    })
 
     createRoadLines.call(this);
     createEnemies.call(this);
@@ -94,30 +112,31 @@ function startGame() {
 
 function playGame() {
     if (gameData.start) {
-        gameData.score += gameData.speed;
-        this.$score.textContent(gameData.score);
+        this.$score.html(`счет<br> ${gameData.score}`);
 
         moveRoad.call(this);
         moveEnemy.call(this);
 
-        if (keys.ArrowLeft && gameData.x > 0) {
+        if ((keys.ArrowLeft || keys.a ) && gameData.x > 0) {
             gameData.x -= gameData.speed;
         } 
 
-        if (keys.ArrowUp && gameData.y > 0) {
+        if ((keys.ArrowUp || keys.w) && gameData.y > 0) {
             gameData.y -= gameData.speed;
         }
 
-        if (keys.ArrowDown && gameData.y < (this.gameArea.offsetHeight - this.$car.$el.offsetHeight - 10)) {
+        if ((keys.ArrowDown || keys.s) && gameData.y < (this.gameArea.offsetHeight - this.$car.$el.offsetHeight - 10)) {
             gameData.y += gameData.speed;
         }
 
-        if (keys.ArrowRight && gameData.x < (this.gameArea.offsetWidth - this.$car.$el.offsetWidth)) {
+        if ((keys.ArrowRight || keys.d) && gameData.x < (this.gameArea.offsetWidth - this.$car.$el.offsetWidth)) {
             gameData.x += gameData.speed;
         }
 
-        this.$car.css('left', gameData.x + 'px')
-        this.$car.css('top', gameData.y + 'px')
+        this.$car.css({
+            left: gameData.x + 'px',
+            top: gameData.y + 'px',
+        });
 
         requestAnimationFrame(playGame.bind(this))
     }
@@ -136,7 +155,9 @@ function createRoadLines() {
         const line = $.create('div', 'line');
 
         line.y = i * 100;
-        line.css('top', line.y + 'px');
+        line.css({
+            top: line.y + 'px',
+        });
         this.$el.appendTo(line, '.game__area');
 
         roadLines.push(line);
@@ -150,11 +171,14 @@ function createEnemies() {
         const enemy = $.create('div', 'enemy');
 
         enemy.y = -100 * gameData.traffic * (i + 1);
-        enemy.css('top', enemy.y + 'px');
-        enemy.css('left', getRand(10, this.gameArea.offsetWidth - 50) + 'px');
-        enemy.css('background', `transparent 
+
+        enemy.css({
+            top: enemy.y + 'px',
+            left: getRand(10, this.gameArea.offsetWidth - 50) + 'px',
+            background: `transparent 
             url("assets/images/enemy${getRand(1, MAX_CARS_NUM)}.png") 
-            center / cover no-repeat`);
+            center / cover no-repeat`
+        });
         this.$el.appendTo(enemy, '.game__area');
 
         enemyCars.push(enemy);
@@ -169,7 +193,9 @@ function moveRoad() {
             line.y = -100;
         }
 
-        line.css('top', line.y + 'px');
+        line.css({
+            top: line.y + 'px'
+        });
     })
 }
 
@@ -188,14 +214,26 @@ function moveEnemy() {
             return;
         }
 
-        if(enemy.y > this.gameArea.clientHeight) {
-            enemy.y = -200 * gameData.traffic;
-            enemy.css('left', getRand(50, this.gameArea.offsetWidth - 50) + 'px');
-            enemy.css('background', `transparent 
-                url("assets/images/enemy${getRand(1, MAX_CARS_NUM)}.png") 
-                center / cover no-repeat`);
+        if(!enemy.ahead && carRect.top < enemyRect.top) {
+            gameData.score++;
+            enemy.ahead = true;
         }
 
-        enemy.css('top', enemy.y + 'px');
+        if(enemy.y > this.gameArea.clientHeight) {
+            enemy.y = -200 * gameData.traffic;
+
+            enemy.ahead = false;
+
+            enemy.css({
+                left: getRand(50, this.gameArea.offsetWidth - 50) + 'px',
+                background: `transparent 
+                url("assets/images/enemy${getRand(1, MAX_CARS_NUM)}.png") 
+                center / cover no-repeat`
+            });
+        }
+
+        enemy.css({
+            top: enemy.y + 'px'
+        });
     })
 }

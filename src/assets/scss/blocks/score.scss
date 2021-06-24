@@ -1,0 +1,19 @@
+.score {
+    width: 100%;
+
+    padding: 10px 0;
+
+    text-align: center;
+    color: #fff;
+    font-weight: 500;
+    font-size: 20px;
+    line-height: 1;
+    text-transform: uppercase;
+
+    background-color: rgba(#000, .8);
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}

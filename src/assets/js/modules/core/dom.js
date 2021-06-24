@@ -69,8 +69,13 @@ class Dom {
         return parent;
     }
 
-    css(prop, value) {
-        this.$el.style[prop] = value;
+    css(styles) {
+        if(typeof styles !== 'object') {
+            throw new Error('Invalid parametr typeoff in css method.')
+        }
+        Object.keys(styles).forEach(key => {
+            this.$el.style[key] = styles[key];
+        });
     }
 
     textContent(value) {

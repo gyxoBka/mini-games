@@ -33,5 +33,9 @@ body {
     display: none;
 }
 
+@import 'blocks/wrapper';
+@import 'blocks/app';
 @import 'blocks/game';
 @import 'blocks/car';
+@import 'blocks/score';
+@import 'blocks/select';
