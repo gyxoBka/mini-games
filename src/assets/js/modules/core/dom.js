@@ -72,6 +72,10 @@ class Dom {
     css(prop, value) {
         this.$el.style[prop] = value;
     }
+
+    textContent(value) {
+        this.$el.textContent = value;
+    }
 }
 
 export function $(selector) {

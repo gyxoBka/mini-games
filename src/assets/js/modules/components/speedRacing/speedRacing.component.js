@@ -14,6 +14,7 @@ export class SpeedRacing extends GameComponent {
         this.$el = $($el);
         this.$car = null;
         this.gameArea = null;
+        this.$score = null;
     }
 
     render() {
@@ -23,6 +24,9 @@ export class SpeedRacing extends GameComponent {
     onClick(e) {
         if (e.target.dataset.start) {
             e.target.classList.add('hide');
+
+            this.$score = $.create('div', 'score');
+            this.$el.append(this.$score);
 
             this.$car = $.create('div', 'car');
             this.gameArea = this.$el.appendTo(this.$car, '.game__area');
@@ -74,8 +78,13 @@ const keyUp = pressedKey => {
 
 function startGame() {
     gameData.start = true;
+    gameData.score = 0;
     gameData.x = this.$car.$el.offsetLeft;
     gameData.y = this.$car.$el.offsetTop;
+
+    this.$car.css('left', this.gameArea.offsetWidth / 2 - this.$car.$el.offsetWidth / 2);
+    this.$car.css('top', 'auto');
+    this.$car.css('bottom', '10px');
 
     createRoadLines.call(this);
     createEnemies.call(this);
@@ -85,6 +94,9 @@ function startGame() {
 
 function playGame() {
     if (gameData.start) {
+        gameData.score += gameData.speed;
+        this.$score.textContent(gameData.score);
+
         moveRoad.call(this);
         moveEnemy.call(this);
 
@@ -162,14 +174,28 @@ function moveRoad() {
 }
 
 function moveEnemy() {
-    enemyCars.forEach(car => {
-        car.y += gameData.speed / 2;
+    enemyCars.forEach(enemy => {
+        enemy.y += gameData.speed / 2;
 
-        if(car.y > this.gameArea.clientHeight) {
-            car.y = -200 * gameData.traffic;
-            car.css('left', getRand(50, this.gameArea.offsetWidth - 50) + 'px');
+        const enemyRect = enemy.$el.getBoundingClientRect();
+        const carRect = this.$car.$el.getBoundingClientRect();
+
+        if(carRect.top <= enemyRect.bottom &&
+            carRect.right >= enemyRect.left &&
+            carRect.left <= enemyRect.right &&
+            carRect.bottom >= enemyRect.top) {
+            gameData.start = false;
+            return;
         }
 
-        car.css('top', car.y + 'px');
+        if(enemy.y > this.gameArea.clientHeight) {
+            enemy.y = -200 * gameData.traffic;
+            enemy.css('left', getRand(50, this.gameArea.offsetWidth - 50) + 'px');
+            enemy.css('background', `transparent 
+                url("assets/images/enemy${getRand(1, MAX_CARS_NUM)}.png") 
+                center / cover no-repeat`);
+        }
+
+        enemy.css('top', enemy.y + 'px');
     })
 }
